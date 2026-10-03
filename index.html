@@ -339,8 +339,8 @@ const FS = 416;                 // sensor readings per second
 const SAMPLE_VIDEO_IMPACT = 200; // sample shot only: the reading that lines up with the video contact frames
 const CAPTURE_FPS = 240;        // the videos were filmed at 240 fps
 const VIDEOS = {
-  1: {src: "swing_angle_1.mp4", frames: 226, contact: 131},
-  2: {src: "swing_angle_2.mp4", frames: 246, contact: 168}
+  1: {src: "https://tmqurighehqlilbadkmu.supabase.co/storage/v1/object/public/demo-assets/swing_angle_1.mp4", frames: 226, contact: 131},
+  2: {src: "https://tmqurighehqlilbadkmu.supabase.co/storage/v1/object/public/demo-assets/swing_angle_2.mp4", frames: 246, contact: 168}
 };
 const COLORS = {x: "#ff6735", y: "#fafafa", z: "#7cc4ff"};
 
@@ -444,7 +444,6 @@ document.querySelectorAll("[data-rate]").forEach(b => b.addEventListener("click"
 }));
 video.addEventListener("loadedmetadata", () => { $("video-msg").hidden = true; if (state.hasVideo) setSample(state.sample); });
 
-// Download each clip whole and play it from memory: works with any local server and makes scrubbing fast.
 const videoUrls = {};
 async function loadVideo(){
   const angle = state.angle;
@@ -458,7 +457,7 @@ async function loadVideo(){
     if (angle === state.angle) video.src = videoUrls[angle];
   } catch (err) {
     $("video-msg").hidden = false;
-    $("video-msg").textContent = "Couldn't load " + VIDEOS[angle].src + ". Open this page through the local server.";
+    $("video-msg").textContent = "Couldn't load this video. Reload the page to try again.";
   }
 }
 
