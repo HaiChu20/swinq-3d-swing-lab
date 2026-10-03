@@ -595,8 +595,11 @@ function detectPhases(d){
   const maxJ = Math.max(...jerk);
   const impact = jerk.findIndex(j => j > 0.5 * maxJ);
   const sm = w.map((_, i) => { let s = 0, c = 0; for (let j = i - 4; j <= i + 4; j++) if (j >= 0 && j < n) { s += w[j]; c++; } return s / c; });
-  let forwardStart = impact - 1;
-  for (let i = impact - 1; i >= Math.max(0, impact - 90); i--) if (sm[i] < sm[forwardStart]) forwardStart = i;
+  // start at the speed peak just before impact, then walk back while the (smoothed) turning speed keeps
+  // falling: where it stops falling is the dip between the racket drop and the forward swing
+  let forwardStart = Math.max(0, impact - 1);
+  for (let i = Math.max(0, impact - 25); i < impact; i++) if (sm[i] > sm[forwardStart]) forwardStart = i;
+  while (forwardStart > Math.max(0, impact - 150) && sm[forwardStart - 1] <= sm[forwardStart]) forwardStart--;
   const peak = Math.max(...w.slice(0, impact + 1));
   let end = n - 1;
   for (let i = impact + 30; i < n; i++) if (w[i] < 0.25 * peak) { end = i; break; }

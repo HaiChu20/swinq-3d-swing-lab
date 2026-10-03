@@ -4,7 +4,9 @@
 //  2. Which way it faces: a forehand hits the ball with the strings facing the net, so we turn the
 //     whole swing around the vertical until the strings face the net (-Z) at impact.
 //  3. How the sensor sits on the racket: during the forward swing the accelerometer feels a strong
-//     pull toward the hand along the handle; the axis that reads it is the handle axis.
+//     pull toward the hand along the handle; the axis that reads it is the handle axis. Which side of
+//     the strings is the front comes from the swing itself: the head moves into the ball face-first.
+//     This works for any mounting (dampener or overmould, either way round).
 import * as THREE from "three";
 import {MOUNTS} from "./calibrate.js";
 
@@ -20,9 +22,21 @@ export function physicsMount(data, ph){
   });
   // + reading = pull toward the hand, so the handle (hand -> head) points the other way
   const handle = (bestMean > 0 ? "−" : "+") + names[best];
-  const face = names[best] === "z" ? "−y" : "−z";
+  const faceAxis = names[best] === "z" ? "y" : "z";
+
+  // Which side of the strings is the front? The strings can't tell front from back, but the swing can:
+  // just before impact the racket head moves INTO the ball, in the direction the strings face.
+  // Head velocity from rotation = turning speed x (handle direction); compare it with the face axis.
+  const h = new THREE.Vector3(...["x", "y", "z"].map(a => a === names[best] ? (handle[0] === "−" ? -1 : 1) : 0));
+  const e = new THREE.Vector3(...["x", "y", "z"].map(a => a === faceAxis ? 1 : 0));
+  let lead = 0;
+  for (let s = Math.max(0, ph.impact - 12); s <= ph.impact - 3; s++) {
+    const w = new THREE.Vector3(data.gx[s], data.gy[s], data.gz[s]);
+    lead += w.cross(h).dot(e);
+  }
+  const face = (lead >= 0 ? "+" : "−") + faceAxis;
   const index = MOUNTS.findIndex(m => m.handle === handle && m.face === face);
-  return {index, handle, axis: names[best], meanG: bestMean};
+  return {index, handle, face, axis: names[best], meanG: bestMean};
 }
 
 export function dataOnlyStart(data, qRel, qMount, impact, window = 20){
