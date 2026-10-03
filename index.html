@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SWINQ Swing Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Style follows swinq.app: near-black ground, white type, grey surfaces, ember-orange accent,
+   Space Grotesk for display, Nunito for body, pill buttons, 12px radius. */
+:root{
+  --bg:#0a0a0a; --surface:#121212; --card:#161616; --muted-bg:#1f1f1f;
+  --fg:#fafafa; --muted:#9a9a9a; --border:rgba(255,255,255,.1); --border-strong:rgba(255,255,255,.18);
+  --ember:#ff6735; --ember-2:#ff7c46; --ball:#d9f04a; --cool:#7cc4ff;
+  --radius:12px;
+  --font-display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --font-sans:"Nunito",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* header */
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,40px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em;text-decoration:none;color:var(--fg)}
+.mark{width:28px;height:28px;border-radius:7px;background:#000;border:1px solid var(--border-strong);display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:17px;line-height:1}
+.mark span{background:linear-gradient(90deg,var(--ember),var(--ember-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand small{font-family:var(--font-display);font-weight:500;font-size:14px;color:var(--muted);padding-left:10px;margin-left:2px;border-left:1px solid var(--border-strong)}
+.pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:600;border:1px solid var(--border-strong);background:transparent;cursor:pointer;transition:transform .15s,filter .15s}
+.pill.solid{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pill:hover{transform:scale(1.03);filter:brightness(1.1)}
+.pill:active{transform:scale(.99)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 4px rgba(255,103,53,.18)}
+
+.wrap{max-width:1280px;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:0 72px}
+
+/* hero */
+.hero{padding-block:56px 32px;display:grid;gap:28px}
+.eyebrow{font-family:var(--font-display);font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(40px,6.5vw,80px);line-height:.98;letter-spacing:-.035em;margin:10px 0 16px;text-wrap:balance}
+.ember{font-style:italic;font-weight:600;background:linear-gradient(90deg,var(--ember),var(--ember-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding-right:.08em}
+.lede{max-width:60ch;color:var(--muted);font-size:18px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.stat .k{font-size:13px;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:15px;color:var(--muted);font-weight:500;margin-left:4px}
+.stat .v.hot{color:var(--ember)}
+
+/* panels */
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.panels{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--border)}
+.card-h h2{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0;letter-spacing:-.01em}
+.card-h p{margin:0;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--muted-bg);border:1px solid var(--border);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.media{position:relative;aspect-ratio:16/9;background:#000;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+.media video{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.badge{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.badge.r{left:auto;right:12px}
+#stage{position:absolute;inset:0}
+#stage canvas{display:block}
+.legend3d{position:absolute;left:12px;bottom:12px;right:12px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--fg)}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.chip em,.badge em{font-style:normal;color:var(--muted);font-weight:500}
+button.chip{pointer-events:auto;cursor:pointer;font-family:inherit}
+button.chip[aria-pressed="false"]{opacity:.5}
+button.chip[aria-pressed="false"] i{background:transparent!important;border:1px solid var(--muted)}
+.badge.hot{color:var(--ember);border-color:rgba(255,103,53,.45)}
+.fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:14px}
+
+/* timeline */
+.timeline{margin-top:16px;padding:16px;display:grid;gap:12px}
+.tl-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.play{width:44px;height:44px;border-radius:50%;border:0;background:var(--fg);color:var(--bg);display:grid;place-items:center;cursor:pointer;flex:none;transition:transform .15s}
+.play:hover{transform:scale(1.05)}
+.play svg{width:18px;height:18px}
+.readout{display:flex;gap:18px;flex-wrap:wrap;font-variant-numeric:tabular-nums;font-size:14px;color:var(--muted)}
+.readout b{color:var(--fg);font-family:var(--font-display);font-weight:600;font-size:16px;margin-left:4px}
+.spacer{flex:1}
+.track{position:relative;padding-top:20px}
+.track input{width:100%;margin:0;accent-color:var(--ember);cursor:pointer}
+.impact-tick{position:absolute;top:0;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--ember);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.impact-tick::after{content:"";display:block;width:1px;height:8px;background:var(--ember);margin:2px auto 0}
+.phases{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px}
+.phases div{background:var(--muted-bg)}
+.phase-names{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:6px}
+.phase-names span em{font-style:normal;color:#666}
+
+/* phases + metrics */
+.phasebar{position:relative;height:22px;border-radius:6px;overflow:hidden;display:flex;background:var(--muted-bg)}
+.phasebar div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;border-right:1px solid var(--bg);min-width:0;padding-inline:4px}
+.phasebar div:last-child{border-right:0}
+.phasebar div.on{background:rgba(255,255,255,.12);color:var(--fg)}
+.phasebar div.contact{background:rgba(255,103,53,.25);color:var(--fg)}
+.phasebar div.contact.on{background:var(--ember);color:#0a0a0a}
+.metrics{margin-top:16px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.metrics .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.calib-note{margin:0;font-size:14px;color:var(--muted);max-width:80ch}
+.pill[disabled],.ctl select[disabled],.ctl input[disabled]{opacity:.4;cursor:not-allowed}
+
+/* calibration */
+.calib{margin-top:16px}
+.calib summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px}
+.calib summary::-webkit-details-marker{display:none}
+.calib summary h2{font-family:var(--font-display);font-size:17px;font-weight:600;margin:0}
+.calib summary h2::after{content:"▾";font-size:12px;color:var(--muted);margin-left:8px;display:inline-block;transition:transform .2s}
+.calib[open] summary h2::after{transform:rotate(180deg)}
+.calib summary p{margin:0;font-size:13px;color:var(--muted)}
+.fit-mean{font-size:14px;color:var(--muted)}
+.fit-mean b{font-family:var(--font-display);font-size:20px;color:var(--fg);margin-left:6px}
+.calib-body{border-top:1px solid var(--border);padding:16px;display:grid;gap:18px}
+.calib-label{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:600}
+.fit-list{display:flex;flex-wrap:wrap;gap:8px}
+.fit-chip{display:inline-flex;align-items:baseline;gap:8px;border:1px solid var(--border);border-radius:999px;padding:5px 12px;background:var(--muted-bg);font-size:13px}
+.fit-chip em{font-style:normal;font-family:var(--font-display);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.fit-chip.good em{color:#8fe3a5}
+.fit-chip.bad em{color:var(--ember)}
+.calib-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:820px){.calib-grid{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:grid;gap:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.ctl span{display:flex;justify-content:space-between}
+.ctl output{color:var(--fg);font-variant-numeric:tabular-nums}
+.ctl input[type=range]{width:100%;accent-color:var(--ember)}
+.ctl select{background:var(--muted-bg);color:var(--fg);border:1px solid var(--border-strong);border-radius:10px;padding:7px 10px;font:inherit;font-weight:600}
+.calib-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);cursor:pointer}
+.check input{accent-color:var(--ember);width:16px;height:16px}
+
+/* charts */
+.charts{margin-top:16px}
+.chart{padding:4px 16px 14px;border-top:1px solid var(--border)}
+.chart:first-of-type{border-top:0}
+.chart-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:12px}
+.chart-h h3{font-family:var(--font-display);font-size:15px;font-weight:600;margin:0}
+.chart-h h3 span{color:var(--muted);font-weight:500;font-size:13px;margin-left:6px}
+.vals{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.vals b{color:var(--fg);font-weight:700;margin-left:4px;display:inline-block;min-width:5ch;text-align:right}
+.vals i{width:10px;height:3px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:6px}
+.chart canvas{width:100%;height:170px;display:block;margin-top:6px;cursor:crosshair}
+.msg{padding:24px 16px;color:var(--muted);font-size:14px}
+.msg code{font-family:var(--font-mono);background:var(--muted-bg);padding:2px 6px;border-radius:6px;color:var(--fg)}
+
+/* loading other recordings */
+.nav-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.notice{margin-bottom:16px;border:1px solid rgba(255,103,53,.45);background:rgba(255,103,53,.08);border-radius:var(--radius);padding:12px 16px;font-size:14px;color:var(--fg)}
+.notice ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.notice.err{border-color:var(--ember);background:rgba(255,103,53,.16)}
+.drop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(10,10,10,.86);backdrop-filter:blur(6px)}
+.drop div{border:2px dashed var(--ember);border-radius:20px;padding:48px 56px;text-align:center;max-width:min(560px,90vw)}
+.drop b{display:block;font-family:var(--font-display);font-size:28px;margin-bottom:6px}
+.drop span{color:var(--muted);font-size:15px}
+body.no-video .vid-only{display:none!important}
+body.no-video .panels{grid-template-columns:minmax(0,1fr)}
+body.no-video #stage-wrap{aspect-ratio:21/9}
+@media (max-width:900px){body.no-video #stage-wrap{aspect-ratio:16/10}}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){.pill,.play{transition:none}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="SWINQ Swing Lab home"><span class="mark"><span>Q</span></span>SWINQ<small>Swing Lab</small></a>
+    <div class="nav-actions">
+      <button type="button" class="pill" id="back-sample" hidden>Back to sample shot</button>
+      <button type="button" class="pill solid" id="load-btn" title="Or drop a CSV file anywhere on the page">Load data (CSV)</button>
+      <input type="file" id="csv-input" accept=".csv,text/csv" hidden>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <section class="hero">
+    <div>
+      <p class="eyebrow" id="eyebrow">Shot #1 · Forehand · 6-axis sensor</p>
+      <h1>Every swing. <span class="ember">Reconstructed.</span></h1>
+      <p class="lede" id="lede">Raw gyroscope and accelerometer data from the racket, lined up with slow-motion video and rebuilt as a 3D swing.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">Sensor readings</div><div class="v" id="st-samples">400<small>@ 416 Hz</small></div></div>
+      <div class="stat"><div class="k">Swing window</div><div class="v" id="st-window">0.96<small>s</small></div></div>
+      <div class="stat"><div class="k">Peak rotation</div><div class="v hot" id="st-peak">–<small>°/s</small></div></div>
+      <div class="stat"><div class="k">Ball impact</div><div class="v" id="st-impact">#200<small>reading</small></div></div>
+    </div>
+  </section>
+
+  <div class="notice" id="notice" role="status" hidden></div>
+
+  <section class="panels">
+    <article class="card vid-only" id="video-card">
+      <div class="card-h">
+        <div><h2>Video</h2><p>Filmed at 240 fps, plays 8× slower</p></div>
+        <div class="seg" role="group" aria-label="Camera angle">
+          <button type="button" data-angle="1" aria-pressed="true">Side</button>
+          <button type="button" data-angle="2" aria-pressed="false">Behind</button>
+        </div>
+      </div>
+      <div class="media">
+        <video id="video" muted playsinline preload="auto"></video>
+        <div class="fallback" id="video-msg">Loading video…</div>
+        <span class="badge" id="frame-badge">Frame 0</span>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="card-h">
+        <div><h2>3D swing</h2><p>Drag to look around</p></div>
+        <div class="seg" role="group" aria-label="Racket motion">
+          <button type="button" data-motion="data" aria-pressed="true" title="Gyroscope + gravity + forehand rule. No video.">Data only</button>
+          <button type="button" class="vid-only" data-motion="video" aria-pressed="false" title="Gyroscope, start direction fitted to the video">Video-fit</button>
+        </div>
+        <div class="seg" role="group" aria-label="3D camera">
+          <button type="button" data-view="side" aria-pressed="true">Side</button>
+          <button type="button" data-view="behind" aria-pressed="false">Behind</button>
+          <button type="button" data-view="free" aria-pressed="false">Free</button>
+        </div>
+      </div>
+      <div class="media" id="stage-wrap">
+        <div id="stage"></div>
+        <div class="fallback" id="stage-fallback" hidden>The 3D view could not load. Check that the vendor/three folder is next to index.html.</div>
+        <span class="badge" id="mode-badge">Data only <em>· loading…</em></span>
+        <span class="badge r" id="speed-badge">Rotation – °/s</span>
+        <div class="legend3d">
+          <span class="chip"><i style="background:var(--ember)"></i>Racket <em id="racket-chip">· sensor</em></span>
+          <span class="chip"><i style="background:var(--ball)"></i>Ball <em>· contact point</em></span>
+          <button type="button" class="chip" id="toggle-player" aria-pressed="true"><i style="background:var(--fg)"></i>Player <em>· forehand model</em></button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="card timeline" aria-label="Timeline">
+    <div class="tl-row">
+      <button class="play" id="play" type="button" aria-label="Play">
+        <svg id="ico-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>
+        <svg id="ico-pause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+      </button>
+      <div class="readout">
+        <span>Reading<b id="ro-sample">0</b></span>
+        <span>Real time<b id="ro-time">0 ms</b></span>
+        <span class="vid-only">Video frame<b id="ro-frame">0</b></span>
+        <span>Phase<b id="ro-phase">–</b></span>
+      </div>
+      <button type="button" class="pill" id="jump-impact" title="Shortcut: I">Jump to impact</button>
+      <span class="spacer"></span>
+      <div class="seg" role="group" aria-label="Playback speed">
+        <button type="button" data-rate="1" aria-pressed="true">8× slow</button>
+        <button type="button" data-rate="0.25" aria-pressed="false">32× slow</button>
+      </div>
+    </div>
+    <div class="track">
+      <span class="impact-tick" id="impact-tick" style="left:calc(200 / 399 * 100%)">Impact</span>
+      <input id="scrub" type="range" min="0" max="399" step="0.1" value="0" aria-label="Sensor reading">
+    </div>
+    <div class="phasebar" id="phasebar" aria-label="Swing phases detected from the data"></div>
+    <div class="phase-names">
+      <span>Swing phases detected from the sensor data</span>
+      <span>Space plays · ← → step one reading · I jumps to impact</span>
+    </div>
+  </section>
+
+  <section class="metrics" aria-label="Swing metrics">
+    <div class="stat"><div class="k">Forward swing</div><div class="v" id="m-fwd">–<small>ms</small></div><div class="sub">from the dip in rotation to impact</div></div>
+    <div class="stat"><div class="k">Racket head speed</div><div class="v hot" id="m-speed">–<small>km/h</small></div><div class="sub">estimate: rotation × 0.6 m</div></div>
+    <div class="stat"><div class="k">Racket face at impact</div><div class="v" id="m-face">–</div><div class="sub" id="m-face-sub">–</div></div>
+    <div class="stat"><div class="k">Swing path at impact</div><div class="v" id="m-path">–</div><div class="sub" id="m-path-sub">–</div></div>
+  </section>
+
+  <details class="card calib vid-only" id="calib">
+    <summary>
+      <div><h2>Check against the video</h2><p>How closely the 3D racket matches the video, and controls to fine-tune it</p></div>
+      <span class="fit-mean">Average handle error <b id="fit-mean">–</b></span>
+    </summary>
+    <div class="calib-body">
+      <p class="calib-note" id="calib-note"></p>
+      <div>
+        <p class="calib-label">Handle direction vs. video, at five moments</p>
+        <div class="fit-list" id="fit-list"></div>
+      </div>
+      <div class="calib-grid">
+        <label class="ctl"><span>Sensor mounting</span><select id="cal-mount"></select></label>
+        <label class="ctl"><span>Turn <output id="cal-yaw-v">0°</output></span><input type="range" id="cal-yaw" min="-45" max="45" step="1" value="0"></label>
+        <label class="ctl"><span>Tilt <output id="cal-pitch-v">0°</output></span><input type="range" id="cal-pitch" min="-45" max="45" step="1" value="0"></label>
+        <label class="ctl"><span>Roll <output id="cal-roll-v">0°</output></span><input type="range" id="cal-roll" min="-45" max="45" step="1" value="0"></label>
+      </div>
+      <div class="calib-actions">
+        <span class="spacer"></span>
+        <button type="button" class="pill" id="cal-auto">Re-run auto-fit</button>
+        <button type="button" class="pill" id="cal-reset">Reset sliders</button>
+        <button type="button" class="pill solid" id="cal-save">Save</button>
+      </div>
+    </div>
+  </details>
+
+  <section class="card charts" aria-label="Sensor data">
+    <div class="card-h"><div><h2>Sensor data</h2><p>Click a chart to jump to that moment</p></div></div>
+    <div id="chart-msg" class="msg" hidden></div>
+    <div class="chart">
+      <div class="chart-h"><h3>Gyroscope<span>how fast the racket turns, °/s</span></h3><div class="vals" id="vals-g"></div></div>
+      <canvas id="chart-g"></canvas>
+    </div>
+    <div class="chart">
+      <div class="chart-h"><h3>Accelerometer<span>how hard it is pushed, g</span></h3><div class="vals" id="vals-a"></div></div>
+      <canvas id="chart-a"></canvas>
+    </div>
+  </section>
+
+  <footer>
+    <span>SWINQ Swing Lab · Hack for Humanity prototype</span>
+    <span id="footer-data">Data: raw_data.csv · Shot #1 · FH</span>
+  </footer>
+</main>
+
+<script type="importmap">
+{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}
+</script>
+
+<div class="drop" id="drop" hidden><div><b>Drop a CSV to simulate it</b><span>Columns ax, ay, az, gx, gy, gz · one forehand · 416 readings per second</span></div></div>
+
+<!-- Data, video sync and charts -->
+<script>
+const FS = 416;                 // sensor readings per second
+const SAMPLE_VIDEO_IMPACT = 200; // sample shot only: the reading that lines up with the video contact frames
+const CAPTURE_FPS = 240;        // the videos were filmed at 240 fps
+const VIDEOS = {
+  1: {src: "swing_angle_1.mp4", frames: 226, contact: 131},
+  2: {src: "swing_angle_2.mp4", frames: 246, contact: 168}
+};
+const COLORS = {x: "#ff6735", y: "#fafafa", z: "#7cc4ff"};
+
+const state = {sample: 0, angle: 1, data: null, playing: false, rate: 1, hasVideo: true, last: 399, t0: 0, s0: 0};
+let sampleShot = null;          // the original recording, kept to switch back without reloading
+const $ = id => document.getElementById(id);
+const video = $("video");
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+// reading <-> video frame, using the ball impact as the shared moment
+const sampleToFrame = s => VIDEOS[state.angle].contact + (s - SAMPLE_VIDEO_IMPACT) * CAPTURE_FPS / FS;
+const frameToSample = f => SAMPLE_VIDEO_IMPACT + (f - VIDEOS[state.angle].contact) * FS / CAPTURE_FPS;
+const fileFps = () => VIDEOS[state.angle].frames / (video.duration || 1);
+
+function seekVideo(){
+  if (!video.duration) return;
+  const f = clamp(sampleToFrame(state.sample), 0, VIDEOS[state.angle].frames - 1);
+  video.currentTime = clamp((f + 0.5) / fileFps(), 0, video.duration - 0.001);
+}
+
+function setSample(s, {fromVideo = false} = {}){
+  state.sample = clamp(s, 0, state.last);
+  $("scrub").value = state.sample;
+  $("ro-sample").textContent = Math.round(state.sample);
+  $("ro-time").textContent = Math.round(state.sample / FS * 1000) + " ms";
+  if (state.hasVideo) {
+    const frame = clamp(Math.round(sampleToFrame(state.sample)), 0, VIDEOS[state.angle].frames - 1);
+    $("ro-frame").textContent = frame;
+    $("frame-badge").textContent = "Frame " + frame;
+  }
+  const ph = phaseAt(state.sample);
+  if (ph) {
+    $("ro-phase").textContent = ph.name;
+    const bars = $("phasebar").children;
+    state.phases.list.forEach((p, i) => bars[i] && bars[i].classList.toggle("on", p === ph));
+  }
+  if (!fromVideo && state.hasVideo) seekVideo();
+  drawCharts();
+  if (window.swingStage) window.swingStage.setSample(state.sample);
+}
+
+// ---- playback ----
+// With the sample shot's video, the video plays and the reading follows it.
+// Without a video, a timer moves the reading: 416 readings per real second, shown 8× (or 32×) slower.
+function setPlaying(on){
+  state.playing = on;
+  $("ico-play").hidden = on; $("ico-pause").hidden = !on;
+  $("play").setAttribute("aria-label", on ? "Pause" : "Play");
+  if (on) {
+    const lastReading = state.hasVideo ? Math.min(state.last, frameToSample(VIDEOS[state.angle].frames - 1)) : state.last;
+    if (state.sample >= lastReading - 1) setSample(0);
+    if (state.hasVideo) {
+      video.playbackRate = state.rate;
+      video.play().catch(() => setPlaying(false));
+      requestAnimationFrame(tick);
+    } else {
+      state.t0 = performance.now(); state.s0 = state.sample;
+      requestAnimationFrame(tickTimer);
+    }
+  } else if (state.hasVideo) {
+    video.pause();
+  }
+}
+function tick(){
+  if (!state.playing || !state.hasVideo) return;
+  const s = frameToSample(video.currentTime * fileFps());
+  if (s >= state.last || video.ended) { setSample(Math.min(state.last, s), {fromVideo: true}); setPlaying(false); return; }
+  setSample(s, {fromVideo: true});
+  requestAnimationFrame(tick);
+}
+function tickTimer(now){
+  if (!state.playing || state.hasVideo) return;
+  const s = state.s0 + (now - state.t0) / 1000 * FS / 8 * state.rate;
+  if (s >= state.last) { setSample(state.last); setPlaying(false); return; }
+  setSample(s);
+  requestAnimationFrame(tickTimer);
+}
+$("play").addEventListener("click", () => setPlaying(!state.playing));
+video.addEventListener("ended", () => setPlaying(false));
+// If the browser pauses the video (e.g. the tab is hidden), stop the playhead too.
+video.addEventListener("pause", () => { if (state.playing) setPlaying(false); });
+$("scrub").addEventListener("input", e => { if (state.playing) setPlaying(false); setSample(parseFloat(e.target.value)); });
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" && e.target.type !== "range") return;
+  if (e.code === "Space") { e.preventDefault(); setPlaying(!state.playing); }
+  if (e.code === "ArrowRight") { e.preventDefault(); setPlaying(false); setSample(Math.round(state.sample) + 1); }
+  if (e.code === "ArrowLeft")  { e.preventDefault(); setPlaying(false); setSample(Math.round(state.sample) - 1); }
+});
+
+document.querySelectorAll("[data-angle]").forEach(b => b.addEventListener("click", () => {
+  if (state.playing) setPlaying(false);
+  state.angle = +b.dataset.angle;
+  document.querySelectorAll("[data-angle]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  loadVideo();
+  if (window.swingStage) window.swingStage.setView(state.angle === 1 ? "side" : "behind");
+}));
+document.querySelectorAll("[data-rate]").forEach(b => b.addEventListener("click", () => {
+  state.rate = parseFloat(b.dataset.rate); video.playbackRate = state.rate;
+  state.t0 = performance.now(); state.s0 = state.sample;   // timer playback continues from here at the new speed
+  document.querySelectorAll("[data-rate]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+}));
+video.addEventListener("loadedmetadata", () => { $("video-msg").hidden = true; if (state.hasVideo) setSample(state.sample); });
+
+// Download each clip whole and play it from memory: works with any local server and makes scrubbing fast.
+const videoUrls = {};
+async function loadVideo(){
+  const angle = state.angle;
+  try {
+    if (!videoUrls[angle]) {
+      $("video-msg").hidden = false; $("video-msg").textContent = "Loading video…";
+      const res = await fetch(VIDEOS[angle].src);
+      if (!res.ok) throw new Error(res.status);
+      videoUrls[angle] = URL.createObjectURL(await res.blob());
+    }
+    if (angle === state.angle) video.src = videoUrls[angle];
+  } catch (err) {
+    $("video-msg").hidden = false;
+    $("video-msg").textContent = "Couldn't load " + VIDEOS[angle].src + ". Open this page through the local server.";
+  }
+}
+
+// ---- data ----
+const COLUMNS = ["ax", "ay", "az", "gx", "gy", "gz"];
+
+// CSV -> {ax, ay, az, gx, gy, gz}. Columns are found by name in the header row, in any order.
+function parseCsv(text){
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) throw new Error("The file is empty.");
+  const header = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, "").toLowerCase());
+  const missing = COLUMNS.filter(c => !header.includes(c));
+  if (missing.length) throw new Error("This file needs the columns ax, ay, az, gx, gy, gz. Missing: " + missing.join(", ") + ".");
+  const idx = COLUMNS.map(c => header.indexOf(c));
+  const data = Object.fromEntries(COLUMNS.map(c => [c, []]));
+  for (let r = 1; r < lines.length; r++) {
+    const cells = lines[r].split(",");
+    idx.forEach((i, k) => {
+      const v = Number(cells[i]);
+      if (!Number.isFinite(v)) throw new Error("Row " + (r + 1) + " has a value in column " + COLUMNS[k] + " that isn't a number.");
+      data[COLUMNS[k]].push(v);
+    });
+  }
+  if (data.ax.length < 100) throw new Error("The file has only " + data.ax.length + " readings; at least 100 are needed for one swing.");
+  return data;
+}
+
+// Sanity checks for a loaded recording (the sample shot passes all of them).
+function checkRecording(d, ph){
+  const warn = [];
+  if (ph.maxJerk < 3) warn.push("No clear ball impact found: the biggest jolt is only " + ph.maxJerk.toFixed(1) + " g. The impact moment may be wrong.");
+  const k = Math.min(20, d.ax.length);
+  let pull = 0, turn = 0;
+  for (let i = 0; i < k; i++) { pull += Math.hypot(d.ax[i], d.ay[i], d.az[i]); turn += Math.hypot(d.gx[i], d.gy[i], d.gz[i]); }
+  pull /= k; turn /= k;
+  if (pull < 0.6 || pull > 1.4 || turn > 300) warn.push("This recording may start mid-swing (start: " + pull.toFixed(2) + " g, " + Math.round(turn) + " °/s). The racket's tilt could be off.");
+  if (ph.impact - ph.forwardStart < 5) warn.push("The forward swing before impact is very short; the swing phases may be off.");
+  return warn;
+}
+
+function showNotice(text, items = [], isError = false){
+  const n = $("notice");
+  n.textContent = "";
+  if (!text) { n.hidden = true; return; }
+  const b = document.createElement("b"); b.textContent = text; n.appendChild(b);
+  if (items.length) { const ul = document.createElement("ul"); items.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); }); n.appendChild(ul); }
+  n.classList.toggle("err", isError);
+  n.hidden = false;
+}
+
+// Show one recording: phases, metrics, charts and the 3D swing. hasVideo = the sample shot with its two videos.
+function applyDataset(data, {name, hasVideo}){
+  if (state.playing) setPlaying(false);
+  const n = data.gx.length;
+  state.data = data;
+  state.hasVideo = hasVideo;
+  state.last = n - 1;
+  document.body.classList.toggle("no-video", !hasVideo);
+  $("back-sample").hidden = hasVideo;
+  $("scrub").max = state.last;
+
+  state.phases = detectPhases(data);
+  const peak = Math.max(...data.gx.map((_, i) => Math.hypot(data.gx[i], data.gy[i], data.gz[i])));
+  $("st-samples").innerHTML = n + "<small>@ " + FS + " Hz</small>";
+  $("st-window").innerHTML = (n / FS).toFixed(2) + "<small>s</small>";
+  $("st-peak").innerHTML = Math.round(peak).toLocaleString("en-US") + "<small>°/s</small>";
+  $("st-impact").innerHTML = "#" + state.phases.impact + "<small>reading</small>";
+  $("impact-tick").style.left = (state.phases.impact / state.last * 100) + "%";
+  buildPhaseBar();
+  showDataMetrics();
+
+  $("eyebrow").textContent = hasVideo ? "Shot #1 · Forehand · 6-axis sensor" : name + " · Forehand · 6-axis sensor";
+  $("lede").textContent = hasVideo
+    ? "Raw gyroscope and accelerometer data from the racket, lined up with slow-motion video and rebuilt as a 3D swing."
+    : "Raw gyroscope and accelerometer data from your recording, rebuilt as a 3D swing from the data alone.";
+  $("footer-data").textContent = "Data: " + name;
+
+  const warnings = hasVideo ? [] : checkRecording(data, state.phases);
+  if (!hasVideo) showNotice("Loaded " + name + ": " + n + " readings, impact at reading " + state.phases.impact + ". Simulated from the data only (no video for this recording).", warnings);
+  else showNotice("");
+
+  window.swingData = data;
+  window.swingPhases = state.phases;
+  window.swingHasVideo = hasVideo;
+  if (window.swingStage) window.swingStage.setData(data, {phases: state.phases, hasVideo});
+  if (hasVideo && !video.src) loadVideo();
+  setSample(hasVideo ? clamp(state.sample, 0, state.last) : 0);
+  drawCharts();
+}
+
+async function loadData(){
+  try {
+    const res = await fetch("raw_data.csv");
+    if (!res.ok) throw new Error(res.status);
+    sampleShot = parseCsv(await res.text());
+    applyDataset(sampleShot, {name: "raw_data.csv · Shot #1 · FH", hasVideo: true});
+  } catch (err) {
+    const m = $("chart-msg");
+    m.hidden = false;
+    m.innerHTML = "Couldn't load <code>raw_data.csv</code>. Open this page through the local server: in this folder run <code>python3 serve.py</code>, then go to <code>http://localhost:8000</code>.";
+  }
+}
+
+async function loadFile(file){
+  if (!file) return;
+  try {
+    const data = parseCsv(await file.text());
+    applyDataset(data, {name: file.name, hasVideo: false});
+    window.scrollTo({top: 0, behavior: "smooth"});
+  } catch (err) {
+    showNotice("Couldn't use " + file.name + ": " + err.message + " The page still shows the previous recording.", [], true);
+  }
+}
+$("load-btn").addEventListener("click", () => $("csv-input").click());
+$("csv-input").addEventListener("change", e => { loadFile(e.target.files[0]); e.target.value = ""; });
+$("back-sample").addEventListener("click", () => { if (sampleShot) applyDataset(sampleShot, {name: "raw_data.csv · Shot #1 · FH", hasVideo: true}); });
+
+// drag and drop anywhere on the page
+let dragDepth = 0;
+const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes("Files");
+window.addEventListener("dragenter", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $("drop").hidden = false; });
+window.addEventListener("dragover", e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $("drop").hidden = true; });
+window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $("drop").hidden = true; loadFile(e.dataTransfer.files[0]); });
+
+// ---- swing phases, detected from the data ----
+//  impact        first big jump in acceleration (ball hits the strings)
+//  forward swing starts at the dip in rotation speed just before impact (after the racket drop)
+//  follow-through ends when rotation speed falls below a quarter of its peak
+function detectPhases(d){
+  const n = d.gx.length;
+  const w = Array.from({length: n}, (_, i) => Math.hypot(d.gx[i], d.gy[i], d.gz[i]));
+  const jerk = Array.from({length: n}, (_, i) => i ? Math.hypot(d.ax[i] - d.ax[i-1], d.ay[i] - d.ay[i-1], d.az[i] - d.az[i-1]) : 0);
+  const maxJ = Math.max(...jerk);
+  const impact = jerk.findIndex(j => j > 0.5 * maxJ);
+  const sm = w.map((_, i) => { let s = 0, c = 0; for (let j = i - 4; j <= i + 4; j++) if (j >= 0 && j < n) { s += w[j]; c++; } return s / c; });
+  let forwardStart = impact - 1;
+  for (let i = impact - 1; i >= Math.max(0, impact - 90); i--) if (sm[i] < sm[forwardStart]) forwardStart = i;
+  const peak = Math.max(...w.slice(0, impact + 1));
+  let end = n - 1;
+  for (let i = impact + 30; i < n; i++) if (w[i] < 0.25 * peak) { end = i; break; }
+  const list = [
+    {name: "Take-back", start: 0, end: forwardStart},
+    {name: "Forward swing", start: forwardStart, end: impact - 3},
+    {name: "Contact", start: impact - 3, end: impact + 6, contact: true},
+    {name: "Follow-through", start: impact + 6, end},
+    {name: "Finish", start: end, end: n - 1}
+  ].filter(p => p.end > p.start);
+  return {impact, forwardStart, end, peak, maxJerk: maxJ, list};
+}
+const phaseAt = s => state.phases ? (state.phases.list.find(p => s >= p.start && s < p.end) || state.phases.list[state.phases.list.length - 1]) : null;
+
+function buildPhaseBar(){
+  const bar = $("phasebar"); bar.textContent = "";
+  for (const p of state.phases.list) {
+    const el = document.createElement("div");
+    el.style.flex = (p.end - p.start) + " 0 0";
+    el.textContent = p.contact ? "" : p.name;   // contact band is too narrow for a label; the Impact tick names it
+    el.title = p.name + " · readings " + p.start + "–" + p.end;
+    if (p.contact) el.classList.add("contact");
+    bar.appendChild(el);
+  }
+}
+function showDataMetrics(){
+  const d = state.data, ph = state.phases;
+  $("m-fwd").innerHTML = Math.round((ph.impact - ph.forwardStart) / FS * 1000) + "<small>ms</small>";
+  let w = 0; for (let i = ph.forwardStart; i < ph.impact; i++) w = Math.max(w, Math.hypot(d.gx[i], d.gy[i], d.gz[i]));
+  $("m-speed").innerHTML = Math.round(w * Math.PI / 180 * 0.6 * 3.6) + "<small>km/h</small>";
+}
+function jumpToImpact(){ if (!state.phases) return; if (state.playing) setPlaying(false); setSample(state.phases.impact); }
+$("jump-impact").addEventListener("click", jumpToImpact);
+document.addEventListener("keydown", e => { if (e.code === "KeyI" && !(e.target.tagName === "INPUT" && e.target.type !== "range")) jumpToImpact(); });
+
+// ---- charts ----
+const CHARTS = [
+  {canvas: "chart-g", vals: "vals-g", keys: ["gx","gy","gz"], unit: "°/s", digits: 0},
+  {canvas: "chart-a", vals: "vals-a", keys: ["ax","ay","az"], unit: "g", digits: 2}
+];
+function drawCharts(){
+  if (!state.data) return;
+  for (const c of CHARTS) drawChart(c);
+}
+function drawChart(c){
+  const cv = $(c.canvas), dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const series = c.keys.map(k => state.data[k]);
+  let lo = Infinity, hi = -Infinity;
+  for (const s of series) for (const v of s) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const L = 44, R = 8, T = 8, B = 20, n = series[0].length;
+  const X = i => L + i / (n - 1) * (w - L - R);
+  const Y = v => T + (hi - v) / (hi - lo) * (h - T - B);
+
+  // grid + labels
+  ctx.font = "11px Nunito, system-ui, sans-serif";
+  ctx.fillStyle = "#777"; ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
+  const ticks = niceTicks(lo, hi, 4);
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const t of ticks) { const y = Math.round(Y(t)) + .5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke(); ctx.fillText(fmtTick(t), L - 8, y); }
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  for (let i = 0; i < n; i += 100) ctx.fillText(i, X(i), h - 4);
+  if (lo < 0 && hi > 0) { ctx.strokeStyle = "rgba(255,255,255,.18)"; const y = Math.round(Y(0)) + .5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke(); }
+
+  // phase bands
+  if (state.phases) state.phases.list.forEach((p, k) => {
+    ctx.fillStyle = p.contact ? "rgba(255,103,53,.10)" : (k % 2 ? "rgba(255,255,255,.025)" : "rgba(255,255,255,0)");
+    ctx.fillRect(X(p.start), T, X(p.end) - X(p.start), h - T - B);
+  });
+
+  // impact marker
+  ctx.strokeStyle = "rgba(255,103,53,.55)"; ctx.setLineDash([4, 4]);
+  const imp = state.phases ? state.phases.impact : SAMPLE_VIDEO_IMPACT;
+  ctx.beginPath(); ctx.moveTo(X(imp) + .5, T); ctx.lineTo(X(imp) + .5, h - B); ctx.stroke(); ctx.setLineDash([]);
+
+  // lines
+  const cols = [COLORS.x, COLORS.y, COLORS.z];
+  series.forEach((s, k) => {
+    ctx.strokeStyle = cols[k]; ctx.lineWidth = 1.5; ctx.globalAlpha = k === 1 ? .85 : 1;
+    ctx.beginPath(); s.forEach((v, i) => i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))); ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+
+  // cursor
+  const cx = X(state.sample);
+  ctx.strokeStyle = "#fafafa"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(cx, T); ctx.lineTo(cx, h - B); ctx.stroke();
+  const i = Math.round(state.sample);
+  series.forEach((s, k) => { ctx.fillStyle = cols[k]; ctx.beginPath(); ctx.arc(cx, Y(s[i]), 3.5, 0, Math.PI * 2); ctx.fill(); });
+
+  // current values
+  $(c.vals).innerHTML = c.keys.map((key, k) =>
+    '<span><i style="background:' + cols[k] + '"></i>' + key + '<b>' + (Math.abs(series[k][i]) < 0.5 * Math.pow(10, -c.digits) ? 0 : series[k][i]).toFixed(c.digits) + '</b></span>').join("");
+
+  cv.onclick = e => {
+    const r = cv.getBoundingClientRect();
+    const s = (e.clientX - r.left - L) / (w - L - R) * (n - 1);
+    if (state.playing) setPlaying(false);
+    setSample(s);
+  };
+}
+function niceTicks(lo, hi, count){
+  const step0 = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const out = []; for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) out.push(+t.toFixed(6));
+  return out;
+}
+const fmtTick = t => Math.abs(t) >= 1000 ? (t / 1000) + "k" : String(t);
+new ResizeObserver(drawCharts).observe(document.querySelector(".charts"));
+
+loadData();
+loadVideo();
+setSample(0);
+</script>
+
+<!-- 3D swing viewer: js/stage.js (scene), js/racket.js (model), js/motion.js (motion) -->
+<script type="module" src="js/stage.js"></script>
+<script>
+// If the 3D module never loads (offline), show a short note instead of an empty box.
+setTimeout(() => { if (!window.swingStage) document.getElementById("stage-fallback").hidden = false; }, 6000);
+</script>
+</body>
+</html>
