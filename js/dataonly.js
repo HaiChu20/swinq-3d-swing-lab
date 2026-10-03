@@ -39,15 +39,58 @@ export function physicsMount(data, ph){
   return {index, handle, face, axis: names[best], meanG: bestMean};
 }
 
-export function dataOnlyStart(data, qRel, qMount, impact, window = 20){
+// The calmest stretch between a0 and a1: slow turning, and a pull close to 1 g (mostly gravity).
+// Score = turning (per 100 deg/s) + distance of the pull from 1 g (in g). Lower is calmer. Both matter:
+// a racket turning fast feels its own swing, and a racket being stopped hard feels a pull far from 1 g.
+export function calmestWindow(data, a0, a1, size = 20){
+  let best = null;
+  for (let a = Math.max(0, a0); a + size <= a1; a += 2) {
+    let turn = 0, pullErr = 0;
+    for (let i = a; i < a + size; i++) {
+      turn += Math.hypot(data.gx[i], data.gy[i], data.gz[i]);
+      pullErr += Math.abs(Math.hypot(data.ax[i], data.ay[i], data.az[i]) - 1);
+    }
+    turn /= size; pullErr /= size;
+    const score = turn / 100 + pullErr;
+    if (!best || score < best.score) best = {start: a, end: a + size - 1, turn, pullErr, score};
+  }
+  return best;
+}
+
+// Start orientation q0 from the data alone.
+//  - Which way is down: gravity, read where the racket is calmest, either in the take-back (before the
+//    forward swing) or in the held finish (well after impact). Each reading is turned into the start frame
+//    with the gyro, so either stretch can be used.
+//  - Which way it faces: turned around the vertical until the strings face the net (-Z) at impact.
+export function dataOnlyStart(data, qRel, qMount, ph){
+  const n = data.gx.length;
+  const candidates = [
+    {where: "take-back", w: calmestWindow(data, 0, Math.max(20, ph.forwardStart - 10))},
+    {where: "finish", w: calmestWindow(data, ph.impact + 60, n)}
+  ].filter(c => c.w);
+  candidates.sort((a, b) => a.w.score - b.w.score);
+  const {where, w} = candidates[0];
+
   const up = new THREE.Vector3();
-  for (let i = 0; i < window; i++) {
+  for (let i = w.start; i <= w.end; i++) {
     up.add(new THREE.Vector3(data.ax[i], data.ay[i], data.az[i]).normalize().applyQuaternion(qRel[i]));
   }
   up.normalize();
   const tilt = new THREE.Quaternion().setFromUnitVectors(up, UP);
-  const face = new THREE.Vector3(0, 0, 1).applyQuaternion(tilt.clone().multiply(qRel[impact]).multiply(qMount));
+  const face = new THREE.Vector3(0, 0, 1).applyQuaternion(tilt.clone().multiply(qRel[ph.impact]).multiply(qMount));
   face.y = 0; face.normalize();
   const yaw = Math.atan2(face.x, face.z) - Math.atan2(0, -1);
-  return new THREE.Quaternion().setFromAxisAngle(UP, -yaw).multiply(tilt);
+  const q0 = new THREE.Quaternion().setFromAxisAngle(UP, -yaw).multiply(tilt);
+  return {q0, gravity: {where, start: w.start, end: w.end, turn: w.turn, pull: 1 + w.pullErr}};
+}
+
+// How far the racket wraps after impact: the "wiper" turn around the string-face axis, averaged over the
+// first ~80 readings of the follow-through. A full forehand wraps fast (~900 deg/s); a short beginner's
+// finish barely does. finishK: 1 = full wrap over the shoulder, 0 = short finish low in front.
+export function followThroughWrap(data, ph, faceAxis){
+  const col = "g" + faceAxis.replace(/[+−-]/g, "");
+  const a = ph.impact + 5, b = Math.min(data.gx.length, ph.impact + 80);
+  let sum = 0; for (let i = a; i < b; i++) sum += Math.abs(data[col][i]);
+  const wiper = sum / Math.max(1, b - a);
+  return {wiper, finishK: Math.min(1, Math.max(0, (wiper - 200) / 400))};
 }

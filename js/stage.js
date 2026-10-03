@@ -14,7 +14,7 @@ import {testMotion as placeholderMotion, handAt as videoHandAt} from "./motion.j
 import {integrateGyro, sensorMotion} from "./imu.js";
 import {autoCalibrate, MOUNTS, errorsForMotion} from "./calibrate.js";
 import {createBody, handTemplateAt} from "./body.js";
-import {dataOnlyStart, physicsMount} from "./dataonly.js";
+import {dataOnlyStart, physicsMount, followThroughWrap} from "./dataonly.js";
 import {CALIBRATION} from "./calibration.js";
 
 const IMPACT = 200;
@@ -282,6 +282,7 @@ renderer.setAnimationLoop(now => {
 //   video : gyroscope, start direction and mounting fitted to five moments in the videos; hand path from video
 let mode = "data";
 let qRel = null;
+let dataInfo = null;                                    // how the data-only start and finish were chosen
 const bases = {data: null, video: null};                 // {q0, mountIndex}
 const offsets = {data: {yaw: 0, pitch: 0, roll: 0}, video: {yaw: 0, pitch: 0, roll: 0}};
 const motions = {data: null, video: null};
@@ -412,7 +413,13 @@ function setData(d, {phases: ph = window.swingPhases, hasVideo = true} = {}){
   qRel = integrateGyro(d, {impact: phases.impact});
   // data only
   const pm = physicsMount(d, phases);
-  bases.data = {mountIndex: pm.index, q0: dataOnlyStart(d, qRel, MOUNTS[pm.index].q, phases.impact)};
+  const start = dataOnlyStart(d, qRel, MOUNTS[pm.index].q, phases);
+  bases.data = {mountIndex: pm.index, q0: start.q0};
+  // full wrap over the shoulder, or a short finish low in front: the body template follows the data
+  const wrap = followThroughWrap(d, phases, pm.face);
+  phases = {...phases, finishK: wrap.finishK};
+  dataInfo = {gravity: start.gravity, wrap, mount: MOUNTS[pm.index].label};
+  console.log("[data only] gravity from the calm " + start.gravity.where + " (readings " + start.gravity.start + "–" + start.gravity.end + ", " + Math.round(start.gravity.turn) + " °/s); follow-through wrap " + Math.round(wrap.wiper) + " °/s → finishK " + wrap.finishK.toFixed(2));
   console.log("[data only] handle axis from accelerometer:", MOUNTS[pm.index].label, "(mean " + pm.meanG.toFixed(1) + " g along " + pm.axis + " in the forward swing)");
   buildMotion("data");
   // video-fit only exists for the sample shot, whose videos we have
@@ -431,6 +438,7 @@ window.swingStage = {
   setMode(m){ mode = m; applyMode(); },
   autoFit: () => qRel && runAutoFit(),
   motions, bases, offsets,
+  get dataInfo(){ return dataInfo; },
   renderNow(){ controls.update(); renderer.render(scene, camera); },   // for screenshots
   racket, rig, ball, player, scene, camera
 };

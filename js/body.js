@@ -25,22 +25,28 @@ function interp(keys, s){
   return keys[keys.length - 1][1];
 }
 
-// Body turn: coiled sideways in the backswing, uncoils through contact, finishes past the net.
+// How complete the finish is: 1 = full wrap over the shoulder, 0 = short finish low in front.
+// Set from the data (js/dataonly.js followThroughWrap); a full finish when unknown.
+const finishK = ph => (ph.finishK == null ? 1 : ph.finishK);
+const mix = (a, b, t) => Array.isArray(a) ? a.map((x, i) => x + (b[i] - x) * t) : a + (b - a) * t;
+
+// Body turn: coiled sideways in the backswing, uncoils through contact, finishes past the net
+// (a short finish turns less).
 export function bodyTurnAt(s, ph){
-  const k = keyTimes(ph);
-  return interp([[k.t0, -80], [k.fs, -95], [k.im, -30], [k.ext, 5], [k.end, 20]], s) * D2R;
+  const k = keyTimes(ph), f = finishK(ph);
+  return interp([[k.t0, -80], [k.fs, -95], [k.im, -30], [k.ext, mix(-18, 5, f)], [k.end, mix(-10, 20, f)]], s) * D2R;
 }
 
 // Where the right hand (racket grip) is during a generic forehand.
-const HAND_KEYS = k => [
+const HAND_KEYS = (k, f) => [
   [k.t0,  [0.15, 1.30, 0.45]],   // racket up, prepared
   [k.fs,  [0.32, 1.02, 0.55]],   // dropped behind the hip
   [k.im,  [0.36, 0.98, -0.12]],  // contact in front of the body
-  [k.ext, [0.18, 1.36, -0.42]],  // extending toward the net
-  [k.end, [-0.16, 1.50, -0.06]]  // finish by the left shoulder
+  [k.ext, mix([0.36, 1.10, -0.45], [0.18, 1.36, -0.42], f)],   // extending toward the net (short: lower, in front)
+  [k.end, mix([0.24, 1.08, -0.30], [-0.16, 1.50, -0.06], f)]   // full: by the left shoulder · short: low in front
 ];
 export function handTemplateAt(s, ph, out = new THREE.Vector3()){
-  const v = interp(HAND_KEYS(keyTimes(ph)), s);
+  const v = interp(HAND_KEYS(keyTimes(ph), finishK(ph)), s);
   return out.set(v[0], v[1], v[2]);
 }
 

@@ -494,7 +494,7 @@ function checkRecording(d, ph){
   let pull = 0, turn = 0;
   for (let i = 0; i < k; i++) { pull += Math.hypot(d.ax[i], d.ay[i], d.az[i]); turn += Math.hypot(d.gx[i], d.gy[i], d.gz[i]); }
   pull /= k; turn /= k;
-  if (pull < 0.6 || pull > 1.4 || turn > 300) warn.push("This recording may start mid-swing (start: " + pull.toFixed(2) + " g, " + Math.round(turn) + " °/s). The racket's tilt could be off.");
+  if (pull < 0.6 || pull > 1.4 || turn > 300) warn.push("This recording may start mid-swing (start: " + pull.toFixed(2) + " g, " + Math.round(turn) + " °/s), so the swing phases may be incomplete.");
   if (ph.impact - ph.forwardStart < 5) warn.push("The forward swing before impact is very short; the swing phases may be off.");
   return warn;
 }
@@ -536,14 +536,22 @@ function applyDataset(data, {name, hasVideo}){
     : "Raw gyroscope and accelerometer data from your recording, rebuilt as a 3D swing from the data alone.";
   $("footer-data").textContent = "Data: " + name;
 
-  const warnings = hasVideo ? [] : checkRecording(data, state.phases);
-  if (!hasVideo) showNotice("Loaded " + name + ": " + n + " readings, impact at reading " + state.phases.impact + ". Simulated from the data only (no video for this recording).", warnings);
-  else showNotice("");
-
   window.swingData = data;
   window.swingPhases = state.phases;
   window.swingHasVideo = hasVideo;
   if (window.swingStage) window.swingStage.setData(data, {phases: state.phases, hasVideo});
+
+  if (!hasVideo) {
+    const items = checkRecording(data, state.phases);
+    const info = window.swingStage && window.swingStage.dataInfo;
+    if (info) {
+      const g = info.gravity;
+      items.push("Which way is down: read from the calmest moment, in the " + g.where + " (readings " + g.start + "–" + g.end + ", turning " + Math.round(g.turn) + " °/s).");
+      if (g.turn > 150) items.push("No really calm moment in this recording, so the racket's tilt (and the face angle) may be off.");
+      items.push(info.wrap.finishK > 0.5 ? "Follow-through: full finish over the shoulder." : "Follow-through: short finish, the racket stays low in front (" + Math.round(info.wrap.wiper) + " °/s wrap).");
+    }
+    showNotice("Loaded " + name + ": " + n + " readings, impact at reading " + state.phases.impact + ". Simulated from the data only (no video for this recording).", items);
+  } else showNotice("");
   if (hasVideo && !video.src) loadVideo();
   setSample(hasVideo ? clamp(state.sample, 0, state.last) : 0);
   drawCharts();

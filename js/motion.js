@@ -26,7 +26,6 @@ function basisQuat(dir, normal){
 }
 
 const KEYQ = KEYS.map(k => basisQuat(k.dir, k.normal));
-const KEYH = KEYS.map(k => new THREE.Vector3(...k.hand));
 
 // The keyframes double as reference poses for calibrating the sensor (js/calibrate.js).
 const LABELS = ["Start", "Drop", "Contact", "Extension", "Finish"];
@@ -47,15 +46,41 @@ export function orientationAt(s, out = new THREE.Quaternion()){
   return out.slerpQuaternions(KEYQ[i], KEYQ[i + 1], t);
 }
 
+// Hand (racket grip) path for Video-fit mode, measured on video 1 (side camera, 255 px per metre from the
+// player's height): back(+Z)/forward(-Z) and height (Y). Left/right (X) keeps the earlier two-camera reading.
+// Readings 100-200 are dense because that is where the racket drops and the hand travels fastest.
+const HAND_PATH = [
+  [0,   [0.12, 1.34,  0.87]],
+  [60,  [0.15, 1.24,  0.82]],
+  [100, [0.20, 1.11,  0.75]],
+  [120, [0.22, 1.01,  0.67]],
+  [140, [0.24, 0.87,  0.53]],
+  [155, [0.26, 0.79,  0.35]],
+  [170, [0.28, 0.75,  0.11]],
+  [185, [0.29, 0.79, -0.23]],
+  [200, [0.30, 0.96, -0.52]],
+  [240, [0.26, 1.38, -0.75]],
+  [285, [0.20, 1.70, -0.58]],
+  [355, [-0.12, 1.67, -0.25]]
+];
+
+// Smooth curve through the measured points (cubic Hermite with tangents scaled to the real time gaps,
+// so unevenly spaced points don't overshoot). Holds the last point after reading 355.
 export function handAt(s, out = new THREE.Vector3()){
-  // Catmull-Rom through the hand keyframes so the hand path is smooth, not kinked.
-  const {i, t} = segment(s);
-  const p0 = KEYH[Math.max(i - 1, 0)], p1 = KEYH[i], p2 = KEYH[i + 1], p3 = KEYH[Math.min(i + 2, KEYH.length - 1)];
-  const t2 = t * t, t3 = t2 * t;
-  for (const k of ["x", "y", "z"]) {
-    out[k] = 0.5 * ((2 * p1[k]) + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3);
-  }
-  return out;
+  const P = HAND_PATH, n = P.length;
+  const c = Math.min(Math.max(s, P[0][0]), P[n - 1][0]);
+  let i = 0;
+  while (i < n - 2 && c > P[i + 1][0]) i++;
+  const [t0, a] = P[i], [t1, b] = P[i + 1];
+  const h = t1 - t0, u = (c - t0) / h;
+  const tangent = j => {
+    const prev = P[Math.max(j - 1, 0)], next = P[Math.min(j + 1, n - 1)];
+    return prev[1].map((_, k) => (next[1][k] - prev[1][k]) / (next[0] - prev[0]));
+  };
+  const ma = tangent(i), mb = tangent(i + 1);
+  const h00 = 2 * u ** 3 - 3 * u ** 2 + 1, h10 = u ** 3 - 2 * u ** 2 + u, h01 = -2 * u ** 3 + 3 * u ** 2, h11 = u ** 3 - u ** 2;
+  const v = a.map((_, k) => h00 * a[k] + h10 * h * ma[k] + h01 * b[k] + h11 * h * mb[k]);
+  return out.set(v[0], v[1], v[2]);
 }
 
 export const testMotion = {name: "test", orientationAt, handAt};
