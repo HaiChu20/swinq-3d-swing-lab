@@ -558,14 +558,14 @@ function applyDataset(data, {name, hasVideo}){
 
 async function loadData(){
   try {
-    const res = await fetch("raw_data.csv");
+    const res = await fetch("data/raw_data.csv");
     if (!res.ok) throw new Error(res.status);
     sampleShot = parseCsv(await res.text());
     applyDataset(sampleShot, {name: "raw_data.csv · Shot #1 · FH", hasVideo: true});
   } catch (err) {
     const m = $("chart-msg");
     m.hidden = false;
-    m.innerHTML = "Couldn't load <code>raw_data.csv</code>. Open this page through the local server: in this folder run <code>python3 serve.py</code>, then go to <code>http://localhost:8000</code>.";
+    m.innerHTML = "Couldn't load <code>raw_data.csv</code>. Open this page through the local server: in this folder run <code>python3 -m http.server 8000</code>, then go to <code>http://localhost:8000</code>.";
   }
 }
 

@@ -1,74 +1,87 @@
-# SWINQ Swing Lab: Every swing. Reconstructed.
+# SWINQ Swing Lab
 
-A web app that turns the data from a racket's sensor into a 3D forehand.
-Built for the SWINQ "Hack for Humanity" challenge.
+**Every swing. Reconstructed.**
 
-## What it does
-- Shows how the racket moves during the swing, using the sensor data.
-- Works from the data alone, without needing the video.
-- Splits the swing into its parts: take-back, forward swing, hit and follow-through.
-- Shows swing numbers: how fast the racket turns, swing time, racket speed,
-  racket face angle and swing direction.
-- Plays the video, sensor charts and 3D swing side by side.
-- Opens any forehand data file, and works out how the sensor sits on the racket.
+A browser app that turns raw data from a racket-mounted motion sensor (IMU) into an
+interactive 3D forehand. Built for the SWINQ *Hack for Humanity* challenge.
+
+## Features
+
+- **3D swing reconstruction:** a real-size racket and player model follow the sensor data.
+- **Data-only mode:** rebuilds the swing from the sensor alone, with no video needed.
+- **Swing phases:** splits the stroke into take-back, forward swing, impact and follow-through.
+- **Swing metrics:** angular velocity, swing duration, racket-head speed, face angle and swing path.
+- **Synced playback:** video, sensor charts and the 3D view play side by side.
+- **Bring your own data:** load any forehand CSV. The app works out how the sensor is mounted on the racket.
 
 ## How it works
-1. **Line up:** the videos are 8× slow motion. The moment the ball hits the
-   strings lines up the video and the data.
-2. **Clean:** smooth out the racket's shaking right after the hit.
-3. **Turn:** add up all the small turns the sensor measures to get the racket's
-   direction at every moment.
-4. **Start:** gravity shows which way is down, and at the hit the strings face the net.
-5. **Show:** move a real-size 3D racket and a player model with it.
-6. **Check:** compare the 3D swing with the video.
 
-## How to run it
+1. **Sync:** the reference videos are 8× slow motion. Ball impact lines up the video with the sensor stream.
+2. **Clean:** smooth out the vibration of the racket right after impact.
+3. **Integrate:** add up the gyroscope readings to get the racket's orientation at every sample.
+4. **Anchor:** gravity gives the down direction, and at impact the strings face the net.
+5. **Render:** drive the 3D racket and player model with the result.
+6. **Validate:** compare the 3D swing with the video.
 
-You only need **Python 3** (already on most Macs) and a web browser (Chrome works best).
-Nothing else to install.
+## Getting started
 
-1. **Get the code**
-   ```bash
-   git clone git@github.com:hoanglhh/SWINQ-3D-stroke-from-sensor-data.git
-   cd SWINQ-3D-stroke-from-sensor-data
-   ```
+**Requirements:** Python 3 (to serve the files locally) and a modern browser (Chrome recommended).
+There is nothing else to install. Three.js is included in `vendor/`.
 
-2. **Start the small local server**
-   ```bash
-   python3 serve.py
-   ```
-   You should see: `Swing Lab running at http://localhost:8000`.
-   Keep this Terminal window open while you use the app.
+```bash
+git clone git@github.com:HaiChu20/swinq-3d-swing-lab.git
+cd swinq-3d-swing-lab
+python3 -m http.server 8000
+```
 
-3. **Open the app** at **http://localhost:8000** in your browser.
+Then open **http://localhost:8000**. Press `Ctrl + C` in the terminal to stop the server.
 
-4. **Stop it** with `Ctrl + C` in the Terminal.
+> **Why a local server?** Browsers block pages opened straight from disk (`file://`)
+> from reading data files. Any static file server works. Your data stays on your machine.
 
-> Why a server? Browsers don't let a page read the data file and videos when you
-> just double-click `index.html`, so `serve.py` serves them locally. Nothing is sent
-> to the internet, and the app also works offline.
+## Usage
 
-### Using the app
-- **Play** (or press `Space`) to watch the swing. **Drag the slider** to move through it.
-- **I** jumps to the moment of the hit. **← →** step one reading.
-- **Data only / Video-fit** switches how the swing's start position is found.
-- **Side / Behind / Free** changes the 3D camera.
-- **Load data (CSV)**, or drag a file onto the page, to try another forehand.
-  Try `aetekni.csv`. The file needs the columns `ax, ay, az, gx, gy, gz`.
-- **Back to sample shot** returns to the original swing with its videos.
-
-### If something goes wrong
-- **"Address already in use"** when starting: the server is already running.
-  Just open http://localhost:8000, or close the other Terminal window first.
-- **Page loads but no data or video:** make sure you opened it through
-  http://localhost:8000, not by double-clicking `index.html`.
-
-## Files
-| File | What it is |
+| Action | Control |
 |---|---|
-| `index.html` | The app page |
-| `js/` | The 3D scene, the sensor maths and the player model |
-| `serve.py` | The small local server |
-| `raw_data.csv`, `swing_angle_1.mp4`, `swing_angle_2.mp4` | The sample swing and its two videos |
-| `aetekni.csv` | Another recording to try |
-| `vendor/three/` | The 3D library (Three.js), included so it works offline |
+| Play / pause | **Play** button or `Space` |
+| Scrub through the swing | Drag the timeline slider |
+| Jump to impact | `I` |
+| Step one sample | `←` / `→` |
+| Orientation source | **Data only** / **Video-fit** |
+| Camera | **Side** / **Behind** / **Free** |
+| Load another recording | **Load data (CSV)**, or drag a file onto the page |
+| Return to the sample | **Back to sample shot** |
+
+### CSV format
+
+A recording needs the columns `ax, ay, az` (accelerometer) and `gx, gy, gz` (gyroscope).
+See `data/aetekni.csv` for a second example recording.
+
+## Project structure
+
+```
+.
+├── index.html        # App shell: UI, charts and playback
+├── js/
+│   ├── stage.js      # 3D scene, camera and render loop
+│   ├── imu.js        # Gyroscope integration → racket orientation
+│   ├── calibrate.js  # Fits the sensor mounting to the video
+│   ├── calibration.js  # Saved calibration for the sample shot
+│   ├── dataonly.js   # Data-only start pose (gravity, handle axis)
+│   ├── motion.js     # Video-derived hand path
+│   ├── racket.js     # Racket model
+│   └── body.js       # Player model
+├── data/
+│   ├── raw_data.csv  # Sample shot (synced with the demo videos)
+│   └── aetekni.csv   # Additional recording to try
+└── vendor/three/     # Three.js, bundled for offline use
+```
+
+The demo videos are streamed from remote storage, so the repository stays light.
+
+## Troubleshooting
+
+- **"Address already in use":** port 8000 is taken. Use another port, e.g. `python3 -m http.server 8080`,
+  and open `http://localhost:8080`.
+- **The page loads but shows no data:** make sure you opened it through `http://localhost:…`
+  and not by double-clicking `index.html`.
